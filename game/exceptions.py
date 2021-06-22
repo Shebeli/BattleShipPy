@@ -26,3 +26,29 @@ class CordinatesValidationError(BaseError):
 
     def __init__(self, span: Tuple[int, int] = (10, 10), message: str = "The given values are not valid cordinates"):
         super().__init__(span, message)
+
+
+class ShipLengthError(BaseError):
+    """Exception raised if given length is not appropriate"""
+
+    def __init__(self, span: range = (2, 5), message: str = 'The given length is not appropriate'):
+        super().__init__(span, message)
+
+
+class SquaresNotAttachedError(Exception):
+    """Exception raised if given squares are not attached"""
+
+    def __init__(self, message: str = 'The given squares are not attached'):
+        super().__init__(message)
+
+class MaxShipReachedError(Exception):
+    """Exception raised if the board reached its maximum ship count"""
+
+    def __init__(self, message: str = 'maximum ship count on board is reached'):
+        super().__init__(message)
+
+class SquareStrikedError(Exception):
+    """Exception raised if the square is already striked"""
+
+    def __init__(self, message: str = 'Selected square has already been striked, choose another'):
+        super().__init__(message)

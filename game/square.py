@@ -20,8 +20,11 @@ class SquareStatus(Enum):
 
 
 class Square:
-    def __init__(self, state=0):
+    def __init__(self, x, y, state=0):
         self._state = state
+        self.x = x
+        self.y = y
+        self.ship = None
 
     @property
     def state(self):
@@ -31,6 +34,10 @@ class Square:
     def state(self, value):
         SquareStatus.validate(value)
         self._state = value
+
+    @property
+    def cord(self):
+        return (self.x, self.y)
 
     def __str__(self):
         return SquareStatus(self.state).name  # 'eg. "EMPTY"'

@@ -52,3 +52,9 @@ class SquareStrikedError(Exception):
 
     def __init__(self, message: str = 'Selected square has already been striked, choose another'):
         super().__init__(message)
+
+class GameStartedError(Exception):
+    """Exception raised if the provoked action cannot be done when the game has started"""
+
+    def __init__(self, message: str = 'Cannot do it since the game has already been started'):
+        super().__init__(message)

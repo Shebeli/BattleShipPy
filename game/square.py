@@ -8,6 +8,7 @@ class SquareStatus(Enum):
     MISSED = 1
     SHIP = 2
     HIT = 3
+    UNKNOWN = 4
 
     @classmethod
     def values(cls):
@@ -21,7 +22,7 @@ class SquareStatus(Enum):
 
 class Square:
     def __init__(self, x, y, state=0):
-        self._state = state
+        self.state = state
         self.x = x
         self.y = y
         self.ship = None
@@ -41,3 +42,6 @@ class Square:
 
     def __str__(self):
         return SquareStatus(self.state).name  # 'eg. "EMPTY"'
+
+    def __repr__(self):
+        return f"({self.x}, {self.y}), STATE: {SquareStatus(self.state).name}"

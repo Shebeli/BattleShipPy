@@ -1,22 +1,29 @@
 from typing import Type, List, Tuple
 
 from .exceptions import SquareStateError, SquaresNotAttachedError, ShipLengthError
+from .square import Square
 
 class Ship:
     def __init__(self, squares: List[Type[Square]]):
-        self._squares = squares
+        self.squares = squares
 
     @property
     def squares(self):
         return self._squares
 
-    @state.setter
-    def squares(self, value):
-        self.validate(squares)
-        for square in squares:
-            square.state = 2
-            square.ship = self
-        self._squares = squares
+    @squares.setter
+    def squares(self, new_sqs):
+        self.validate(new_sqs)
+        try:
+            for sq in self.squares:
+                sq.state = 0
+                sq.ship = None
+        except AttributeError:
+            pass
+        for sq in new_sqs:
+            sq.state = 2
+            sq.ship = self
+        self._squares = new_sqs
 
     def validate(self, squares: List[Type[Square]]):
         """
@@ -29,7 +36,7 @@ class Ship:
         first_x = squares[0][0]
         first_y = squares[0][1]
         for x, y in squares:  # continues cordinates validation
-            if x != first_x and y != first_y:
+            if x != first_x and y != first_y: 
                 raise SquaresNotAttachedError
 
     @staticmethod
@@ -47,3 +54,12 @@ class Ship:
     @property
     def length(self):
         return len(self.squares)
+
+    def is_destroyed(self):
+        for square in self.squares:
+            if square.state != 3:
+                return False
+        return True
+
+    def __repr__(self):
+        return f"LENGTH: {self.length}, SQS: {self.squares}"

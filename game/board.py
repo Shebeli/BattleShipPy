@@ -3,7 +3,7 @@ from typing import Type, List, Tuple
 from game.square import Square
 from game.ship import Ship
 from game.exceptions import (NotValidChoiceError, CordinatesValidationError, SquareStateError, ShipLengthError,
-                         SquaresNotAttachedError, MaxShipReachedError)
+                             SquaresNotAttachedError, MaxShipReachedError)
 
 
 class Board:
@@ -33,7 +33,6 @@ class Board:
     @property
     def ships(self):
         return self._ships
-        
 
     @property
     def cords(self):
@@ -66,6 +65,7 @@ class Board:
         square_objects = self.filter(cordinates)
         ship = Ship(square_objects)
         self._ships.append(ship)
+        return ship
 
     def is_finished(self):
         for ship in self.ships:

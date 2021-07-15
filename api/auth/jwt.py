@@ -17,10 +17,6 @@ from api.models.user import UserSet
 security = HTTPBearer()
 users = UserSet()
 
-# def add_user(username):
-#     id_ = next(id_counter)
-#     UsersList[id_] = username
-#     return id_
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()

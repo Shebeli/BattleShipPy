@@ -2,3 +2,10 @@ test.py
 .pytest_cache
 *__pycache__
 .vscode
+.idea/.gitignore
+.idea/battleship.iml
+.idea/discord.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/inspectionProfiles/profiles_settings.xml

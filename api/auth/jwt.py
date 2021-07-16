@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Set
-import itertools
-from collections.abc import Set
 
 from fastapi import HTTPException, status, Header, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -11,11 +9,11 @@ from jose import jwt, JWTError
 
 from api.conf.settings import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 from api.models.user import UserSet
-
-# Lobbies: Dict[str, Set(int, int)] = {}
+from api.models.lobby import LobbySet
 
 security = HTTPBearer()
 users = UserSet()
+lobbies = LobbySet()
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):

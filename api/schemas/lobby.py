@@ -1,22 +1,26 @@
 from pydantic import BaseModel
-from typing import Tuple
+from typing import List
 from uuid import uuid4
 
-class LobbyGeneral(BaseModel):
-    lobby_id: str
-    host: int
-    players: Tuple(int, int)
+from api.schemas.user import UserIn, UserOut
+class LobbyGet(BaseModel):
+    uuid: str
+    host: UserOut
+    players: List[UserOut]
     has_started: bool = False
     is_full: bool = False
+class LobbyGetList(BaseModel):
+    lobbies: List[LobbyGet]
 
 class LobbyOut(BaseModel):
-    lobby_id: str
-    host: int
-    players: Tuple(int, int)
+    id: int
+    uuid: str
+    host: UserOut
+    players: List[UserOut]
 
 
 class LobbyIn(BaseModel):
-    lobby_id: str
+    uuid: str
 
 
         

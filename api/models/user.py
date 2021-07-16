@@ -6,6 +6,12 @@ class User:
         self.id = id
         self.username = username
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username
+        }
+
 
 class UserSet:
     def __init__(self):
@@ -16,16 +22,16 @@ class UserSet:
     def users_id(self):
         return [user.id for user in self.users]
 
+    def create_and_add(self, username):
+        user = User(next(self.counter), username)
+        self.users.add(user)
+        return user
+        
     def get(self, id):
         for user in self.users:
             if user.id == id:
                 return user
         return
-
-    def create_and_add(self, username):
-        user = User(next(self.counter), username)
-        self.users.add(user)
-        return user
 
     def remove(self, id):
         user = self.get(id)

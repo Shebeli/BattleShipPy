@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from api.auth.jwt import create_access_token, get_user_from_header_token, users
-from api.conf.settings import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
+from api.conf.settings import ACCESS_TOKEN_EXPIRE_MINUTES
 from api.models.user import User
 from api.schemas.user import Token, UserIn, UserOut
 from fastapi import APIRouter, Depends, HTTPException, status

@@ -32,7 +32,7 @@ def get_user_from_header_token(auth: HTTPAuthorizationCredentials = Depends(secu
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         user_id = int(payload.get('sub'))
-        if user_id not in users.users_id:
+        if user_id not in users.ids:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail='Username not found')
     except JWTError:

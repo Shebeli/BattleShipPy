@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import List
 
 class Token(BaseModel):
     access_token: str
@@ -9,6 +9,5 @@ class Token(BaseModel):
 class UserOut(BaseModel):
     id: int
     username: str
-
 class UserIn(BaseModel):
     username: str 

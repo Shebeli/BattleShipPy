@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import List
 
 from api.auth.jwt import create_access_token, get_user_from_header_token, users
 from api.conf.settings import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -10,7 +11,7 @@ router = APIRouter()
 
 
 @router.post("/token", response_model=Token)
-def create_user_with_token(user: UserIn):
+async def create_user_with_token(user: UserIn):
     user = users.create_and_add(user.username)
     access_token_expires = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={'sub': str(user.id), 'username': user.username}, expires_delta=access_token_expires)
@@ -18,5 +19,10 @@ def create_user_with_token(user: UserIn):
 
 
 @router.get("/token/test_header", response_model=UserOut)
-def test_token_header(user: User = Depends(get_user_from_header_token)):
-    return UserOut(id=user.id, username=user.username)
+async def test_token_header(user: User = Depends(get_user_from_header_token)):
+    return user.to_dict()
+
+# @router.get("/users", response_model=List[UserOut])
+# async def get_users():
+#     users_out = [user.to_dict() for user in users]
+#     return users_out

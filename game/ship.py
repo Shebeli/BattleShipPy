@@ -4,7 +4,7 @@ from .exceptions import SquareStateError, SquaresNotAttachedError, ShipLengthErr
 from .square import Square
 
 class Ship:
-    def __init__(self, squares: List[Type[Square]]):
+    def __init__(self, squares: List[Square]):
         self.squares = squares
 
     @property

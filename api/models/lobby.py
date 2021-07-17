@@ -11,6 +11,7 @@ class Lobby:
         self.host = host
         self.has_started = False
         self.players.add(host)
+        self.game = None
 
     @property
     def is_full(self):

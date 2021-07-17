@@ -1,22 +1,22 @@
 import pytest
 
-from game.core import Player, Core
+from game.core import Player, BattleShipGame
 from game.ship import Ship
 from game.exceptions import ShipLengthError, GameConditionError, SquareStrikedError
 
 @pytest.fixture
 def empty_core():
-    return Core()
+    return BattleShipGame()
 
 @pytest.fixture
 def finished_core():
-    c = Core()
+    c = BattleShipGame()
     c.is_finished = True
     return c
 
 @pytest.fixture
 def default_core():
-    return Core.start_game()
+    return BattleShipGame.start_game()
 
 @pytest.fixture
 def core_withoneship(empty_core):
@@ -31,10 +31,10 @@ def cship(core_withoneship):
 class TestCore:
     
     def test_instantiation(self, empty_core):
-        assert isinstance(empty_core, Core)
+        assert isinstance(empty_core, BattleShipGame)
 
     def test_start_game(self):
-        core = Core.start_game()
+        core = BattleShipGame.start_game()
         assert all([len(p.board.ships) == core.max_ship_count for p in core.players])
 
     # @pytest.mark.parametrize(

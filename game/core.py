@@ -5,18 +5,18 @@ from random import sample, randint, choice
 from game.board import Board
 from game.ship import Ship
 from game.exceptions import SquareStateError, ShipLengthError, SquareStrikedError, GameConditionError, MaxShipReachedError
-
+from api.models.user import User
 
 class Player:
-    def __init__(self, name: str,  board: Type[Board]):
-        self.name = name
+    def __init__(self, user: User,  board: Board):
+        self.user = User
         self.board = board
+        self.ready = False
 
-
-class Core:  # there should be some sort of verification where the player is verified to be the owner of the board, and so they cant access the opponent's board.
-    def __init__(self, p1_name='player1', p2_name='player2', x=7, y=7, max_ship_count=7):
-        self.p1 = Player(p1_name, Board(x, y, max_ship_count))
-        self.p2 = Player(p2_name, Board(x, y, max_ship_count))
+class BattleShipGame:  # there should be some sort of verification where the player is verified to be the owner of the board, and so they cant access the opponent's board.
+    def __init__(self, p1: User, p2: User, x=7, y=7, max_ship_count=7):
+        self.p1 = Player(p1, Board(x, y, max_ship_count))
+        self.p2 = Player(p2, Board(x, y, max_ship_count))
         self.x = x
         self.y = y
         self.max_ship_count = max_ship_count
@@ -33,7 +33,7 @@ class Core:  # there should be some sort of verification where the player is ver
             return self.p2
         raise Exception("Given argument should be either integer 1 or 2")
 
-    def validate_finish(self):
+    def _validate_finish(self):
         if self.winner:
             raise Exception("Game is finished")
 
@@ -73,7 +73,7 @@ class Core:  # there should be some sort of verification where the player is ver
         The ships are created randomly at players boards.
         Ships can be only created randomly once.
         """
-        self.validate_finish()
+        self._validate_finish()
         b1 = self.p1.board
         # len(b1.ships) == self.ship_count and len(b2.ships) == self.ship_count:
         b2 = self.p2.board
@@ -120,16 +120,16 @@ class Core:  # there should be some sort of verification where the player is ver
         square = player.board.get_square(cord[0], cord[1])
         return square.ship
 
-    def move_ship(self, ship: Type[Ship], cords: List[Tuple[int, int]], p_num: int):
+    def move_ship(self, ship: Ship, cords: List[Tuple[int, int]], p_num: int):
         """
         Moves a ship to the given cordinates.
         """
-        player = self._player(p_num)
-        board = player.board
         if self.started or self.finished:
             raise GameConditionError
         if len(cords) != ship.length:
             raise ShipLengthError
+        player = self._player(p_num)
+        board = player.board
         new_sqs = board.filter(cords)
         # if any([sq.state != 0 for sq in new_sqs]):
         #     raise SquareStateError("One of the squares are not empty")
@@ -152,14 +152,11 @@ class Core:  # there should be some sort of verification where the player is ver
         if square.state in [1, 3]:
             raise SquareStrikedError
         if square.state == 0:
-            print(f"{self.turn.name} missed!")
             square.state = 1
             self.change_turn()
         else:
-            print(f"{self.turn.name} hit a ship!")
             square.state = 3
             if board.is_finished():
-                print(f"{self.turn.name} won!")
                 self.winner = self.turn
 
     def player_map(self, p_num: int):
@@ -167,12 +164,12 @@ class Core:  # there should be some sort of verification where the player is ver
         player = self._player(p_num)
         return [[square.state for square in sq_list] for sq_list in player.board.squares]
 
-    def hidden_map(self, p_num: int):
+    def opponent_map(self, p_num: int):
         """
         Returns a 2D array showing the player's hidden board.
         This is the map that should be shown to player's opponent.
         """
-        player = self._player(p_num)
+        player = self._player(p_num) # input should be main user, but returns the opponent user's map.
         return [[self._hide_map(square) for square in sq_list] for sq_list in player.board.squares]
 
     @staticmethod
@@ -182,7 +179,7 @@ class Core:  # there should be some sort of verification where the player is ver
         return 4
 
     @classmethod
-    def start_game(cls, p1='player1', p2='player2'):
+    def start_game(cls, p1, p2):
         """Used to istantiate a core object with given player names and default settings"""
         game = cls(p1, p2)
         game.setup_ships()

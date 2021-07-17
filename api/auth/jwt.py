@@ -40,3 +40,9 @@ def get_user_from_header_token(auth: HTTPAuthorizationCredentials = Depends(secu
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Credentials are not valid???")
     return users.get(user_id) # user object
 
+def get_lobby_from_user(user: Depends(get_user_from_header_token)):
+    lobby = lobbies.user_get_lobby(user)
+    if not lobby:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is in no lobby")
+    return lobby
+

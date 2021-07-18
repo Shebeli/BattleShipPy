@@ -46,3 +46,8 @@ def get_lobby_from_user(user: Depends(get_user_from_header_token)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is in no lobby")
     return lobby
 
+def get_game_from_lobby(lobby: Depends(get_lobby_from_user)):
+    game = lobby.game
+    if not game:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Theres no started game for this lobby")
+    return game

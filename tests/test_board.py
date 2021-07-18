@@ -124,22 +124,22 @@ class TestBoard:
 
     def test_get_square(self, board):
         # maybe some other ways? there's no other way
-        assert isinstance(board.get_square(0, 0), Square)
+        assert isinstance(board.get_square((0, 0)), Square)
 
     @pytest.mark.parametrize(
-        "i,j,state,raise_error,error_type",
-        [(0, 0, 2, False, None),
-         (0, 0, 12, True, NotValidChoiceError),
-         (0, 15, 2, True, CordinatesValidationError)]
+        "state,cord,raise_error,error_type",
+        [(0, (0, 2), False, None),
+         (6, (0, 6), True, NotValidChoiceError),
+         (0, (15, 2), True, CordinatesValidationError)]
     )
-    def test_update_state(self, board, i, j, state, raise_error, error_type):
+    def test_update_state(self, board, cord, state, raise_error, error_type):
         if raise_error:
             with pytest.raises(error_type):
-                sq = board.get_square(i, j)
-                board.update_state(state, i, j)
+                sq = board.get_square(cord)
+                board.update_state(state, cord)
         else:
-            sq = board.get_square(i, j)
-            board.update_state(state, i, j)
+            sq = board.get_square(cord)
+            board.update_state(state, cord)
 
     @pytest.mark.parametrize(
         "cords,raise_error,error_type, dummy",
@@ -162,8 +162,7 @@ class TestBoard:
     def test_board_is_over(self, board_wship):
         cords = [(0, 1), (0, 2), (0, 3)]
         for cord in cords:
-            i, j = cord[0], cord[1]
-            board_wship.update_state(3, i, j)
+            board_wship.update_state(3, cord)
         assert board_wship.is_finished()
 
     def test_board_is_not_over(self, board_wship):

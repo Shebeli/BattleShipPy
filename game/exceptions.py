@@ -59,3 +59,5 @@ class GameConditionError(Exception):
     def __init__(self, message: str = 'Cannot do it since the game has already been started or finished'):
         super().__init__(message)
 
+class PlayerTurnError(Exception):
+    pass

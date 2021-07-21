@@ -15,7 +15,7 @@ router = APIRouter()
 # REST endpoints
 
 
-@router.get("/get-lobbies/", response_model=List[LobbyGet])
+@router.get("/get-lobbies", response_model=List[LobbyGet])
 async def get_lobbies():
     lobbies_out = [lobby.to_dict() for lobby in lobbies]
     return lobbies_out
@@ -82,6 +82,10 @@ async def join_lobby(lobby_input: LobbyIn, user: User = Depends(get_user_from_he
 @router.post("/leave-lobby", status_code=status.HTTP_204_NO_CONTENT, description="Used when current user wants to leave the lobby")
 async def leave_lobby(user: User = Depends(get_user_from_header_token)):
     lobby = lobbies.user_get_lobby(user)
+    if not lobby:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Theres no lobby for this user"
+        )
     if lobby.has_started:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="the lobby has been started, can't leave")

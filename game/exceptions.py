@@ -61,3 +61,9 @@ class GameConditionError(Exception):
 
 class PlayerTurnError(Exception):
     pass
+
+class StartedOrFinishedError(Exception):
+    pass
+
+class PlayerDoesNotExist(Exception):
+    pass

@@ -1,22 +1,23 @@
-from typing import Type, List, Tuple
+from typing import Type, List, Tuple, Any
 from itertools import product, cycle, count
 from random import sample, randint, choice
 
 from game.board import Board
 from game.ship import Ship
-from game.exceptions import SquareStateError, ShipLengthError, SquareStrikedError, GameConditionError, MaxShipReachedError, PlayerTurnError
-from api.models.user import User
+from game.exceptions import (SquareStateError, ShipLengthError, SquareStrikedError,
+                             GameConditionError,PlayerDoesNotExist , MaxShipReachedError, PlayerTurnError, StartedOrFinishedError)
+
 
 
 class Player:
-    def __init__(self, user: User,  board: Board):
-        self.user = User
+    def __init__(self, user: Any,  board: Board):
+        self.user = user
         self.board = board
         self.ready = False
 
 
 class BattleShipGame:  # there should be some sort of verification where the player is verified to be the owner of the board, and so they cant access the opponent's board.
-    def __init__(self, p1: User, p2: User, x=7, y=7, max_ship_count=7):
+    def __init__(self, p1: Any, p2: Any, x=7, y=7, max_ship_count=7):
         self.p1 = Player(p1, Board(x, y, max_ship_count))
         self.p2 = Player(p2, Board(x, y, max_ship_count))
         self.x = x
@@ -28,17 +29,22 @@ class BattleShipGame:  # there should be some sort of verification where the pla
         self.finished = False
         self.winner = None
 
-    def _validate_player(self, user: User):
-        if user in self.players:
-            return user
-        raise Exception("The given player is not in this game")
+    def _validate_player(self, user: Any):
+        users = [p.user for p in self.players]
+        if user not in users:
+            raise PlayerDoesNotExist("The given player is not in this game")
 
     def _validate_finish(self):
         if self.winner:
-            raise Exception("Game is finished")
+            raise StartedOrFinishedError("Game is finished")
 
-    def get_opponent(self, user: User):
-        return next((p for p in self.players if p != user))
+    def get_player(self, user: Any):
+        self._validate_player(user)
+        return next((p for p in self.players if p.user == user))
+
+    def get_opponent(self, user: Any):
+        self._validate_player(user)
+        return next((p for p in self.players if p.user != user))
 
     @property
     def players(self):
@@ -51,7 +57,7 @@ class BattleShipGame:  # there should be some sort of verification where the pla
     @turn.setter
     def turn(self, player):
         if player not in self.players:
-            raise Exception(
+            raise PlayerTurnError(
                 "player should be one of game's players. use change_turn method instead")
         self._turn = player
 
@@ -60,11 +66,11 @@ class BattleShipGame:  # there should be some sort of verification where the pla
         return self._winner
 
     @winner.setter
-    def winner(self, player: User):
+    def winner(self, player: Any):
         if self.finished:
-            raise Exception("The game is already finished")
+            raise StartedOrFinishedError("The game is already finished")
         if player not in self.players and player is not None:
-            raise Exception("Should be one of the game's player")
+            raise PlayerDoesNotExist("Should be one of the game's player")
         self._winner = player
 
     def change_turn(self):
@@ -116,13 +122,13 @@ class BattleShipGame:  # there should be some sort of verification where the pla
                         board_cords.remove(element)
                     c += 1
 
-    def get_ship(self, cord: Tuple[int, int], player: User):
+    def get_ship(self, cord: Tuple[int, int], user: Any):
         """Returns the ship associated with the given cordinate."""
-        player = self._validate_player(player)
+        player = self.get_player(user)
         square = player.board.get_square(cord)
         return square.ship
 
-    def move_ship(self, ship: Ship, cords: List[Tuple[int, int]], player: User):
+    def move_ship(self, ship: Ship, cords: List[Tuple[int, int]], user: Any):
         """
         Moves a ship to the given cordinates.
         """
@@ -130,22 +136,25 @@ class BattleShipGame:  # there should be some sort of verification where the pla
             raise GameConditionError
         if len(cords) != ship.length:
             raise ShipLengthError
-        player = self._validate_player(player)
+        player = self.get_player(user)
         board = player.board
         new_sqs = board.filter(cords)
         ship.squares = new_sqs
 
-    def strike(self, cord: Tuple[int, int], player: User):
+    def strike(self, cord: Tuple[int, int], user: Any):
         """
         Strikes a given cord on board depending on whos turn it is.
         the turn doesn't change if it hits a ship square.
-        Missed squares cannot be targeted again.
-        eg. player 1 strikes 0,0 cordinate and player2's board will be targeted 
+        Missed or hit squares cannot be targeted again.
         """
-        player = self._validate_player(player)
+        player = self.get_player(user)
+        if self.finished:
+            raise Exception("The game is over")
+        if not self.started:
+            raise Exception("The game hasnt been started")
         if self._turn != player:
             raise PlayerTurnError("It's not your turn yet.")
-        board = self.get_opponent(player).board  # get opponent
+        board = self.get_opponent(user).board  # get opponent
         square = board.get_square(cord)
         if square.state in [1, 3]:
             raise SquareStrikedError
@@ -157,17 +166,18 @@ class BattleShipGame:  # there should be some sort of verification where the pla
             if board.is_finished():
                 self.winner = self.turn
 
-    def player_map(self, player: User):
+    def player_map(self, user: Any):
         """Returns a 2D array showing the player's board"""
-        player = self._validate_player(player)
+        player = self.get_player(user)
         return [[square.state for square in sq_list] for sq_list in player.board.squares]
 
-    def opponent_map(self, player: User):
+    def opponent_map(self, user: Any):
         """
         Returns a 2D array showing the player's hidden board.
         This is the map that should be shown to player's opponent.
         """
-        opp = self.get_opponent(self._validate_player(player))
+        player = self.get_player(user)
+        opp = self.get_opponent(player)
         return [[self._hide_map(square) for square in sq_list] for sq_list in opp.board.squares]
 
     @staticmethod
@@ -187,4 +197,4 @@ class BattleShipGame:  # there should be some sort of verification where the pla
         return f"Players: {self.players}, finished: {self.finished}"
 
     def __repr__(self):
-        return f"{self.players}"
+        return f"finished: {self.finished} started: {self.finished} turn: {self.turn}"

@@ -13,6 +13,9 @@ class User:
             'username': self.username
         }
 
+    def __str__(self):
+        return f"Username: {self.username}| id: {self.id}"
+
 
 class UserSet(CustomSet):
     sub_class = User

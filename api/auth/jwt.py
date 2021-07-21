@@ -8,8 +8,8 @@ from pydantic.error_wrappers import ValidationError
 from jose import jwt, JWTError
 
 from api.conf.settings import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
-from api.models.user import UserSet
-from api.models.lobby import LobbySet
+from api.models.user import UserSet, User
+from api.models.lobby import LobbySet, Lobby
 
 security = HTTPBearer()
 users = UserSet()
@@ -38,16 +38,20 @@ def get_user_from_header_token(auth: HTTPAuthorizationCredentials = Depends(secu
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Credentials are not valid???")
-    return users.get(user_id) # user object
+    return users.get(user_id)  # user object
 
-def get_lobby_from_user(user: Depends(get_user_from_header_token)):
+
+def get_lobby_from_user(user: User = Depends(get_user_from_header_token)):
     lobby = lobbies.user_get_lobby(user)
     if not lobby:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User is in no lobby")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User is in no lobby")
     return lobby
 
-def get_game_from_lobby(lobby: Depends(get_lobby_from_user)):
+
+def get_game_from_lobby(lobby: Lobby = Depends(get_lobby_from_user)):
     game = lobby.game
     if not game:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Theres no started game for this lobby")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Theres no started game for this lobby")
     return game

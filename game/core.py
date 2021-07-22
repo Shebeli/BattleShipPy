@@ -128,6 +128,12 @@ class BattleShipGame:  # there should be some sort of verification where the pla
         square = player.board.get_square(cord)
         return square.ship
 
+    def get_ships(self, user: Any):
+        """Returns all the ship for a user"""
+        player = self.get_player(user)
+        ships = player.board.ships
+        return ships
+
     def move_ship(self, ship: Ship, cords: List[Tuple[int, int]], user: Any):
         """
         Moves a ship to the given cordinates.
@@ -176,8 +182,7 @@ class BattleShipGame:  # there should be some sort of verification where the pla
         Returns a 2D array showing the player's hidden board.
         This is the map that should be shown to player's opponent.
         """
-        player = self.get_player(user)
-        opp = self.get_opponent(player)
+        opp = self.get_opponent(user)
         return [[self._hide_map(square) for square in sq_list] for sq_list in opp.board.squares]
 
     @staticmethod

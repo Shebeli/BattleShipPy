@@ -3,6 +3,7 @@ from typing import Type, List, Tuple
 from .exceptions import SquareStateError, SquaresNotAttachedError, ShipLengthError
 from .square import Square
 
+
 class Ship:
     def __init__(self, squares: List[Square]):
         self.squares = squares
@@ -10,6 +11,10 @@ class Ship:
     @property
     def squares(self):
         return self._squares
+
+    @property
+    def cords(self):
+        return [sq.cord for sq in self.squares]
 
     @squares.setter
     def squares(self, new_sqs):
@@ -27,8 +32,7 @@ class Ship:
 
     def validate(self, squares: List[Type[Square]]):
         """
-        Validates the length and emptiness of given squares
-        and if the squares are attached or not.
+        Validates the the length, emptiness and attachness of given squares.
         """
         self.validate_empty(squares)
         self.validate_length(squares)
@@ -36,7 +40,7 @@ class Ship:
         first_x = squares[0][0]
         first_y = squares[0][1]
         for x, y in squares:  # continues cordinates validation
-            if x != first_x and y != first_y: 
+            if x != first_x and y != first_y:
                 raise SquaresNotAttachedError
 
     @staticmethod

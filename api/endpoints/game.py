@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from game.core import Player, BattleShipGame
-from game.exceptions import CordinatesValidationError, ShipLengthError, PlayerTurnError, SquareStrikedError
-from api.schemas.game import Map, SelectedSquare, SelectedSquares, ReadyGame, StartGame, ReadyOut, GameState
+from game.exceptions import (CordinatesValidationError, ShipLengthError, PlayerTurnError,
+                             SquareStrikedError, SquaresNotAttachedError, SquareStateError)
+from api.schemas.game import Map, SelectedCord, SelectedCords, MoveShipCords, ReadyGame, StartGame, ReadyOut, GameState, ShipOut
 from api.auth.jwt import lobbies, get_user_from_header_token, get_lobby_from_user, get_game_from_lobby
 from api.models.user import User
 from api.models.lobby import Lobby
@@ -14,7 +15,7 @@ router = APIRouter()
 
 
 @router.post("/start-lobby")
-def start_game(
+def start_lobby(
         user: User = Depends(get_user_from_header_token),
         lobby: Lobby = Depends(get_lobby_from_user)):
     if lobby.has_started:
@@ -37,29 +38,50 @@ def start_game(
 def my_map(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
-    return {"map": game.player_map(user)}  # battlshipclass should be refactored
+    return {"map": game.player_map(user)}
 
 
 @router.get("/opp-map", response_model=Map)
 def opponent_map(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
-    return {"map": game.opponent_map(user)}  # battlshipclass should be refactored
+    return {"map": game.opponent_map(user)}
 
+
+@router.get("/get-ship", response_model=ShipOut)
+def get_ship(
+        x: int,
+        y: int,
+        user: User = Depends(get_user_from_header_token),
+        game: BattleShipGame = Depends(get_game_from_lobby)):
+    cord = (x, y)
+    ship = game.get_ship(cord, user)
+    if not ship:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No ship found for given cordinate")
+    return ShipOut(cordinates=ship.cords)
+
+@router.get("/get-ships", response_model=List[ShipOut])
+def get_ships(
+        user: User = Depends(get_user_from_header_token),
+        game: BattleShipGame = Depends(get_game_from_lobby)):
+    ships = game.get_ships(user)
+    if not ships:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No ship for this player")
+    return [ship.cord for ship in ships]
 
 @router.get("/game-state", response_model=GameState)
 def game_state(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
-    return GameState(turn=game.turn.username, started=game.started, finished=game.finished, winner=game.winner)
+    return GameState(turn=game.turn.user.username, started=game.started, finished=game.finished, winner=game.winner)
 
 
-@router.post("/move-ship", status_code=status.HTTP_202_ACCEPTED, response_model=Map)
+@router.post("/move-ship", status_code=status.HTTP_202_ACCEPTED, response_model=Map,
+             description="Note that since ships might get mixed when near each other,use get ship API to confirm each ship exact cordination")
 def move_ship(
-        cordinates: SelectedSquares,
+        cordinates: MoveShipCords,
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
-    print(cordinates)
     if game.started or game.finished:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='The game has already been started or finished! cannot move ship!')
@@ -74,9 +96,10 @@ def move_ship(
                             detail='Theres no ship in this square!')
     try:
         game.move_ship(ship, cordinates.cordinate)
-    except ShipLengthError:  # another case where SquaresAreNotAttached, MinXMax and if SquaresAreNotEmpty
+    # another case where SquaresAreNotAttached, MinXMax and if SquaresAreNotEmpty
+    except (ShipLengthError, SquareStateError, SquaresNotAttachedError):
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
-                            detail="Number of cordinates should be equale to the length of the ship!")
+                            detail="Given length of ship is not valid, or selected squares are not empty, or they are not continues")
     return game.player_map(user)
 
 
@@ -114,14 +137,15 @@ def start_game(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="One or both of players are not ready!")
     game.started = True
-    return GameState(turn=game.turn.username, started=game.started, finished=game.finished, winner=game.winner)
+    return GameState(turn=game.turn.user.username, started=game.started, finished=game.finished, winner=game.winner)
 
 
-@router.post("/strike-square", response_model=Map)
+@router.post("/strike-square")
 def strike_square(
-        square: SelectedSquare,
+        square: SelectedCord,
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
+    player = game.get_player(user)
     if not game.started:  # players should be ready
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Players are not ready yet!")
@@ -138,7 +162,7 @@ def strike_square(
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=detail)
     if game.winner:
-        return {"detail": "woooo you won game gg wp"}
-    if game.turn != user:
-        return game.opponent_map(user)
-    return game.opponent_map(user)
+        return {"detail": "Congratz u won the game!"}
+    if game.turn == player:
+        return {"detail": "You've been granted another strike!"}
+    return {"detail": "You missed!"}

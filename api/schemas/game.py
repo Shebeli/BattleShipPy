@@ -1,5 +1,5 @@
 from pydantic import BaseModel, validator, root_validator
-from typing import List, Optional
+from typing import List, Optional, Tuple
  
 from api.models.user import User
 
@@ -28,8 +28,24 @@ class Map(BaseModel):
     map: List[List[int]] # enum
     striked_ship: Optional[bool] = None
 
-class SelectedSquare(BaseModel):
-    cordinate: List[int]
+    class Config:
+        schema_extra = {
+            "example": {
+                "map": [
+                    [2, 2, 2, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 2, 2, 0, 0],
+                    [2, 2, 2, 2, 0, 0, 2],
+                    [0, 0, 0, 0, 0, 0, 2],
+                    [0, 0, 0, 0, 0, 0, 2],
+                ],
+                "striked_ship": True
+            }
+        }
+
+class SelectedCord(BaseModel):
+    cordinate: Tuple[int, int]
 
     _validate_cord = validator('cordinate', allow_reuse=True)(validate_cordinate)
 
@@ -39,7 +55,37 @@ class SelectedSquare(BaseModel):
                 "cordinate": [1, 2],
         }
     }
-class SelectedSquares(BaseModel):
+
+class SelectedCords(BaseModel):
+    cordinates: List[List[int]]
+
+    _validate_cord = validator('cordinates', allow_reuse=True, each_item=True)(validate_cordinate)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "cordinates": [
+                    [2, 2],
+                    [2, 3],
+                    [2, 4]
+                ]
+            }
+        }
+
+class ShipOut(BaseModel):
+    cordinates: List[Tuple[int, int]]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "cordinates": [
+                    [2, 2],
+                    [2, 3],
+                    [2, 4]
+                ]
+            }
+        }    
+class MoveShipCords(BaseModel):
     cordinate: List[int]
     cordinates: List[List[int]]
 

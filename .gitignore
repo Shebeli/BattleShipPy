@@ -1,6 +1,8 @@
-test.py
+# py cache
 .pytest_cache
 *__pycache__
+
+# IDE cache
 .vscode
 .idea/.gitignore
 .idea/battleship.iml
@@ -9,4 +11,6 @@ test.py
 .idea/modules.xml
 .idea/vcs.xml
 .idea/inspectionProfiles/profiles_settings.xml
-p.py
+
+# poetry 
+poetry.lock

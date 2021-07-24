@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "BattleShip"
-version = "0.1.0"
-description = ""
+version = "0.2.0"
+description = "Battleship game vector engine and API using vector"
 authors = ["shebeli <shervinsaeedi78@gmail.com>"]
 
 [tool.poetry.dependencies]

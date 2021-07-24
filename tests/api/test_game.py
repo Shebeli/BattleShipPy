@@ -43,7 +43,9 @@ def test_move_ship(full_lobby, client):
     # since we don't know where a ship is, we POST using the first square which we get from map
     map_ = client.get("/my-map", headers=j).json()['map']
     x, y = get_first_sq(map_, 2)
-    ship_cord = client.get("/get-ship", headers=j, params={'x': x, 'y': y})
+    response = client.get("/get-ship", headers=j, params={'x': x, 'y': y})
+    ship_cord = response.json()['cordinates']
+    # implementing this test is complex since the location of ships are random and the output can be many different cases.
     assert True
 
 def test_ready_game(full_lobby, client):
@@ -57,9 +59,23 @@ def test_start_game(full_lobby, client):
     client.post("/ready-game", headers=j, json={'ready': True})
     client.post("/ready-game", headers=m, json={'ready': True})
     response = client.post("/start-game", headers=j)
-    print(response.json())
     assert response.status_code == 200
 
-# def test_strike(full_lobby, client):
-#     j, m = full_lobby
-#     client.post("/strike-square", headers=j, )
+@pytest.fixture
+def started_game(full_lobby, client):
+    j, m = full_lobby
+    client.post("/ready-game", headers=j, json={'ready': True})
+    client.post("/ready-game", headers=m, json={'ready': True})
+    client.post("/start-game", headers=j)
+    return j, m
+
+def test_strike(started_game, client):
+    j, m = started_game
+    response = client.post("/strike-square", headers=j, json={'cordinate': [0, 0]})
+    # note that this test is 50/50 since turn can be the other player and 406 error indicates this state.
+    assert response.status_code == 200 or response.status_code == 406
+
+def test_cordinate_validator(started_game, client):
+    j, m = started_game
+    response = client.post("/strike-square", headers=j, json={'cordinate': [0, 0, 0]})
+    assert response.status_code == 422

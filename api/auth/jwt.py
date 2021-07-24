@@ -53,5 +53,5 @@ def get_game_from_lobby(lobby: Lobby = Depends(get_lobby_from_user)):
     game = lobby.game
     if not game:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Theres no started game for this lobby")
+                            detail="Theres no game object for this lobby. start the lobby first")
     return game

@@ -48,5 +48,5 @@ def test_lobby_leave_empty(john_header):
 def test_lobby_start(lobby, john_header, mike_header):
     response2 = client.post('/join-lobby', json={'uuid': lobby}, headers=mike_header)
     response = client.post('/start-lobby', headers=john_header)
-    assert response.json() == {'detail': 'game has been started!'}
+    assert response.json() == {'detail': 'lobby has been started!'}
     assert response.status_code == 200

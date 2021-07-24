@@ -26,7 +26,6 @@ class GameState(BaseModel):
     winner: Optional[str] = None
 class Map(BaseModel):
     map: List[List[int]] # enum
-    striked_ship: Optional[bool] = None
 
     class Config:
         schema_extra = {
@@ -45,7 +44,7 @@ class Map(BaseModel):
         }
 
 class SelectedCord(BaseModel):
-    cordinate: Tuple[int, int]
+    cordinate: List[int]
 
     _validate_cord = validator('cordinate', allow_reuse=True)(validate_cordinate)
 
@@ -73,7 +72,7 @@ class SelectedCords(BaseModel):
         }
 
 class ShipOut(BaseModel):
-    cordinates: List[Tuple[int, int]]
+    cordinates: List[List[int]]
 
     class Config:
         schema_extra = {
@@ -103,3 +102,4 @@ class MoveShipCords(BaseModel):
 
     _validate_cord = validator('cordinate', allow_reuse=True)(validate_cordinate)
     _validate_cords = validator('cordinates', allow_reuse=True, each_item=True)(validate_cordinate)
+

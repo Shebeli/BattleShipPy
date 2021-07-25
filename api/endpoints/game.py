@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.post("/start-lobby")
-def start_lobby(
+async def start_lobby(
         user: User = Depends(get_user_from_header_token),
         lobby: Lobby = Depends(get_lobby_from_user)):
     if lobby.has_started:
@@ -35,21 +35,21 @@ def start_lobby(
 
 
 @router.get("/my-map", response_model=Map)
-def my_map(
+async def my_map(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
     return Map(map=game.player_map(user))
 
 
 @router.get("/opp-map", response_model=Map)
-def opponent_map(
+async def opponent_map(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
     return Map(map=game.opponent_map(user))
 
 
 @router.get("/get-ship", response_model=ShipOut)
-def get_ship(
+async def get_ship(
         x: int,
         y: int,
         user: User = Depends(get_user_from_header_token),
@@ -61,7 +61,7 @@ def get_ship(
     return ShipOut(cordinates=ship.cords)
 
 @router.get("/get-ships", response_model=List[ShipOut])
-def get_ships(
+async def get_ships(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
     ships = game.get_ships(user)
@@ -70,7 +70,7 @@ def get_ships(
     return [{'cordinates': ship.cords} for ship in ships]
 
 @router.get("/game-state", response_model=GameState)
-def game_state(
+async def game_state(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
     return GameState(turn=game.turn.user.username, started=game.started, finished=game.finished, winner=game.winner)
@@ -78,7 +78,7 @@ def game_state(
 
 @router.put("/move-ship", status_code=status.HTTP_202_ACCEPTED, response_model=Map,
              description="Note that since ships might get mixed when near each other,use get ship API to confirm each ship exact cordination")
-def move_ship(
+async def move_ship(
         cordinates: MoveShipCords,
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
@@ -104,7 +104,7 @@ def move_ship(
 
 
 @router.put("/ready-game", response_model=List[ReadyOut])
-def ready_game(
+async def ready_game(
         ready: ReadyGame,
         user: User = Depends(get_user_from_header_token),
         lobby: Lobby = Depends(get_lobby_from_user),
@@ -123,7 +123,7 @@ def ready_game(
 
 
 @router.put("/start-game", response_model=GameState)
-def start_game(
+async def start_game(
         user: User = Depends(get_user_from_header_token),
         lobby: Lobby = Depends(get_lobby_from_user),
         game: BattleShipGame = Depends(get_game_from_lobby)):
@@ -141,7 +141,7 @@ def start_game(
 
 
 @router.put("/strike-square")
-def strike_square(
+async def strike_square(
         square: SelectedCord,
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
@@ -168,3 +168,5 @@ def strike_square(
     if game.turn == player:
         return {"detail": "You've been granted another strike!"}
     return {"detail": "You missed!"}
+
+

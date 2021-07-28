@@ -1,4 +1,4 @@
-from .exceptions import NotValidChoiceError
+from game.exceptions import NotValidChoiceError
 
 from enum import Enum
 

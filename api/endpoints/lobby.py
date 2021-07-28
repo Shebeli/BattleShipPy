@@ -1,18 +1,12 @@
-from datetime import datetime,  timedelta
-from uuid import uuid4
 from typing import List
 
 from fastapi import HTTPException, status, APIRouter, Depends
 
 from api.schemas.lobby import LobbyIn, LobbyOut,  LobbyGet
-from api.auth.jwt import lobbies, users, get_user_from_header_token
+from api.auth.jwt import lobbies, get_user_from_header_token
 from api.models.user import User
-from api.models.lobby import Lobby
-from api.conf.settings import ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
 
 router = APIRouter()
-
-# REST endpoints
 
 
 @router.get("/get-lobbies", response_model=List[LobbyGet])
@@ -51,8 +45,6 @@ async def delete_lobby(lobby_id: int, user: User = Depends(get_user_from_header_
     lobbies.remove_id(lobby_id)
     return
 
-# custom endpoints
-
 
 @router.get("/my-lobby", response_model=LobbyGet)
 async def get_my_lobby(user: User = Depends(get_user_from_header_token)):
@@ -72,33 +64,32 @@ async def join_lobby(lobby_input: LobbyIn, user: User = Depends(get_user_from_he
         if lobby.uuid == lobby_input.uuid:
             if lobby.is_full:
                 raise HTTPException(
-                    status_code=status.HTTP_406_NOT_ACCEPTABLE, detail='Lobby is full!')
+                    status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                    detail='Lobby is full!')
             lobby.add_player(user)
             return lobby.to_dict()
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail='Lobby not found')
 
 
-@router.put("/leave-lobby", status_code=status.HTTP_204_NO_CONTENT, description="Used when current user wants to leave the lobby")
+@router.put("/leave-lobby", status_code=status.HTTP_204_NO_CONTENT,
+            description="Used when current user wants to leave the lobby")
 async def leave_lobby(user: User = Depends(get_user_from_header_token)):
     lobby = lobbies.user_get_lobby(user)
     if not lobby:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Theres no lobby for this user"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Theres no lobby for this user"
         )
     if lobby.has_started:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="the lobby has been started, can't leave")
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="the lobby has been started, can't leave")
     if not lobby:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="User is not in lobby")
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not in lobby")
     lobby.remove_player(user)
     if not lobby.players:
         lobbies.remove(lobby)
     return
-
-# @router.get("/user-and-lobbies/")
-# async def user_n_lobbies():
-#     data = [ for lobby in lobbies]
-#     return json.dump()
-    

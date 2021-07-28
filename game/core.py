@@ -1,12 +1,16 @@
-from typing import Type, List, Tuple, Any
-from itertools import product, cycle, count
-from random import sample, randint, choice
+from typing import List, Tuple, Any
+from itertools import cycle
+from random import randint, choice
 
 from game.board import Board
 from game.ship import Ship
-from game.exceptions import (SquareStateError, ShipLengthError, SquareStrikedError,
-                             GameConditionError,PlayerDoesNotExist , MaxShipReachedError, PlayerTurnError, StartedOrFinishedError)
+from game.exceptions import (ShipLengthError, SquareStrikedError, GameConditionError,
+                             PlayerDoesNotExist, MaxShipReachedError, PlayerTurnError,
+                             StartedOrFinishedError)
 
+
+def is_sub(sub, main):
+    return all(item in main for item in sub)
 
 
 class Player:
@@ -34,9 +38,13 @@ class BattleShipGame:  # there should be some sort of verification where the pla
         if user not in users:
             raise PlayerDoesNotExist("The given player is not in this game")
 
+    def _validate_start(self):
+        if self.started:
+            raise GameConditionError("Game is started")
+
     def _validate_finish(self):
-        if self.winner:
-            raise StartedOrFinishedError("Game is finished")
+        if self.finished:
+            raise GameConditionError("Game is finished")
 
     def get_player(self, user: Any):
         self._validate_player(user)
@@ -67,8 +75,7 @@ class BattleShipGame:  # there should be some sort of verification where the pla
 
     @winner.setter
     def winner(self, player: Any):
-        if self.finished:
-            raise StartedOrFinishedError("The game is already finished")
+        self._validate_finish()
         if player not in self.players and player is not None:
             raise PlayerDoesNotExist("Should be one of the game's player")
         self._winner = player
@@ -83,44 +90,37 @@ class BattleShipGame:  # there should be some sort of verification where the pla
         Ships can be only created randomly once.
         """
         self._validate_finish()
-        b1 = self.p1.board
-        b2 = self.p2.board
-        if all([len(x.ships) == self.max_ship_count for x in [b1, b2]]):
+        b1, b2 = self.p1.board, self.p2.board
+        if all(len(board.ships) == self.max_ship_count for board in (b1, b2)):
             raise MaxShipReachedError
-        self._random_ships(b1, b2)
+        self._create_random_ships(b1, b2)
 
-    def _random_ships(self, *boards: Type[Board]):
-        lengths = [randint(2, 5) for _ in range(self.max_ship_count)]
+    def _create_random_ships(self, *boards: List[Board]):
+        """Create ships with random positions for given boards.
+
+        Even though ships positions will be random, 
+        There will be equal number of ships with equal length 
+        through the boards.
+        """
+        random_lengths = cycle(randint(2, 5)
+                               for _ in range(self.max_ship_count))
+        length = next(random_lengths)
         for board in boards:
             board_cords = board.cords
-            c = 0
             while len(board.ships) != self.max_ship_count:
-                length = lengths[c]
-                i, j = choice(board_cords)  # (0,5)
-                if 0 <= i + length <= self.x and all([(i+z, j) in board_cords for z in range(length)]):
-                    cords = [(i+z, j) for z in range(length)]
-                    board.create_ship(cords)
-                    for element in cords:
-                        board_cords.remove(element)
-                    c += 1
-                elif 0 <= i - length <= self.x and all([(i-z, j) in board_cords for z in range(length)]):
-                    cords = [(i-z, j) for z in range(length)]
-                    board.create_ship(cords)
-                    for element in cords:
-                        board_cords.remove(element)
-                    c += 1
-                elif 0 <= j + length <= self.y and all([(i, j+z) in board_cords for z in range(length)]):
-                    cords = [(i, j+z) for z in range(length)]
-                    board.create_ship(cords)
-                    for element in cords:
-                        board_cords.remove(element)
-                    c += 1
-                elif 0 <= j - length <= self.y and all([(i, j-z) in board_cords for z in range(length)]):
-                    cords = [(i, j-z) for z in range(length)]
-                    board.create_ship(cords)
-                    for element in cords:
-                        board_cords.remove(element)
-                    c += 1
+                i, j = choice(board_cords)  # base random cord
+                four_sides = []
+                four_sides.append([(i+z, j) for z in range(length)])
+                four_sides.append([(i-z, j) for z in range(length)])
+                four_sides.append([(i, j+z) for z in range(length)])
+                four_sides.append([(i, j-z) for z in range(length)])
+                for cords in four_sides:
+                    if is_sub(cords, board_cords):
+                        board.create_ship(cords)
+                        for cord in cords:
+                            board_cords.remove(cord)
+                        length = next(random_lengths)
+                        break
 
     def get_ship(self, cord: Tuple[int, int], user: Any):
         """Returns the ship associated with the given cordinate."""
@@ -135,30 +135,27 @@ class BattleShipGame:  # there should be some sort of verification where the pla
         return ships
 
     def move_ship(self, ship: Ship, cords: List[Tuple[int, int]], user: Any):
-        """
-        Moves a ship to the given cordinates.
-        """
-        if self.started or self.finished:
-            raise GameConditionError
+        """Moves a ship to the given cordinates."""
+        self._validate_start()
+        self._validate_finish()
         if len(cords) != ship.length:
             raise ShipLengthError
         player = self.get_player(user)
         board = player.board
-        new_sqs = board.filter(cords)
+        new_sqs = board.get_squares(cords)
         ship.squares = new_sqs
 
     def strike(self, cord: Tuple[int, int], user: Any):
-        """
-        Strikes a given cord on board depending on whos turn it is.
+        """Strikes a given cord on board depending on whos turn it is.
+
         the turn doesn't change if it hits a ship square.
         Missed or hit squares cannot be targeted again.
         """
         player = self.get_player(user)
-        if self.finished:
-            raise Exception("The game is over")
+        self._validate_finish()
         if not self.started:
-            raise Exception("The game hasnt been started")
-        if self._turn != player:
+            raise GameConditionError("The game hasn't been started")
+        if self.turn != player:
             raise PlayerTurnError("It's not your turn yet.")
         board = self.get_opponent(user).board  # get opponent
         square = board.get_square(cord)
@@ -193,7 +190,6 @@ class BattleShipGame:  # there should be some sort of verification where the pla
 
     @classmethod
     def start_game(cls, p1, p2):
-        """Used to instantiate core object with given player names and default settings"""
         game = cls(p1, p2)
         game.setup_ships()
         return game

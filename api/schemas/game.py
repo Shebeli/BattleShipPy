@@ -1,31 +1,37 @@
-from pydantic import BaseModel, validator, root_validator
-from typing import List, Optional, Tuple
- 
-from api.models.user import User
+from typing import List, Optional
+
+from pydantic import BaseModel, validator
+
 
 def validate_cordinate(cord: List[int]):
     if len(cord) != 2:
         raise ValueError("Cordinate only takes 2 integers")
     return cord
 
+
 class ReadyGame(BaseModel):
     ready: bool
 
+
 class StartGame(BaseModel):
     start: bool
+
 
 class ReadyOut(BaseModel):
     id: int
     username: str
     ready: bool
 
+
 class GameState(BaseModel):
     turn: str
     started: bool
     finished: bool
     winner: Optional[str] = None
+
+
 class Map(BaseModel):
-    map: List[List[int]] # enum
+    map: List[List[int]]  # enum
 
     class Config:
         schema_extra = {
@@ -43,22 +49,26 @@ class Map(BaseModel):
             }
         }
 
+
 class SelectedCord(BaseModel):
     cordinate: List[int]
 
-    _validate_cord = validator('cordinate', allow_reuse=True)(validate_cordinate)
+    _validate_cord = validator(
+        'cordinate', allow_reuse=True)(validate_cordinate)
 
     class Config:
         schema_extra = {
             "example": {
                 "cordinate": [1, 2],
+            }
         }
-    }
+
 
 class SelectedCords(BaseModel):
     cordinates: List[List[int]]
 
-    _validate_cord = validator('cordinates', allow_reuse=True, each_item=True)(validate_cordinate)
+    _validate_cord = validator(
+        'cordinates', allow_reuse=True, each_item=True)(validate_cordinate)
 
     class Config:
         schema_extra = {
@@ -70,6 +80,7 @@ class SelectedCords(BaseModel):
                 ]
             }
         }
+
 
 class ShipOut(BaseModel):
     cordinates: List[List[int]]
@@ -83,7 +94,9 @@ class ShipOut(BaseModel):
                     [2, 4]
                 ]
             }
-        }    
+        }
+
+
 class MoveShipCords(BaseModel):
     cordinate: List[int]
     cordinates: List[List[int]]
@@ -100,6 +113,7 @@ class MoveShipCords(BaseModel):
             }
         }
 
-    _validate_cord = validator('cordinate', allow_reuse=True)(validate_cordinate)
-    _validate_cords = validator('cordinates', allow_reuse=True, each_item=True)(validate_cordinate)
-
+    _validate_cord = validator(
+        'cordinate', allow_reuse=True)(validate_cordinate)
+    _validate_cords = validator(
+        'cordinates', allow_reuse=True, each_item=True)(validate_cordinate)

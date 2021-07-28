@@ -6,17 +6,15 @@ from game.exceptions import NotValidChoiceError
 
 @pytest.fixture
 def square():
-    return Square(0,0, 3)
+    return Square(0, 0, 3)
 
 
 class TestSquares:
-    """SquareStatus and Square classes."""
 
     def test_values(self):
         assert SquareStatus.values() == [0, 1, 2, 3, 4]
 
     def test_validation_raises_error(self):
-        
         with pytest.raises(NotValidChoiceError):
             SquareStatus.validate(10)
 

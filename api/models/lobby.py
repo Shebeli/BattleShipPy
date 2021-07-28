@@ -1,11 +1,12 @@
 from uuid import uuid4
-from itertools import count
 
 from api.models.user import User
-from api.models.base import CustomSet
+from api.models.base import AbstractCustomSet
+
+
 class Lobby:
-    def __init__(self, id, host: User):
-        self.id = id
+    def __init__(self, id_, host: User):
+        self.id = id_
         self.uuid = uuid4().hex[:10]
         self.players = set()
         self.host = host
@@ -31,7 +32,7 @@ class Lobby:
         if self.players:
             self.host = next(iter(self.players))
         else:
-            self.host = None # object should be deleted
+            self.host = None  # object should be deleted
 
     def to_dict(self):
         return {
@@ -43,7 +44,8 @@ class Lobby:
             'is_full': self.is_full
         }
 
-class LobbySet(CustomSet):
+
+class LobbySet(AbstractCustomSet):
     sub_class = Lobby
 
     def user_get_lobby(self, user: User):
@@ -58,5 +60,3 @@ class LobbySet(CustomSet):
             if user in lobby.players:
                 return True
         return False
-
-            

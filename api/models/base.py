@@ -1,7 +1,7 @@
 from itertools import count
 
 
-class CustomSet(set):
+class AbstractCustomSet(set):
     """A custom set for creating objects with a counter for each object id and some extra methods"""
     sub_class = None
 
@@ -18,14 +18,14 @@ class CustomSet(set):
         self.add(obj)
         return obj
 
-    def get(self, id):
+    def get(self, id_):
         for obj in self:
-            if obj.id == id:
+            if obj.id == id_:
                 return obj
-        return
+        return None
 
-    def remove_id(self, id):
-        obj = self.get(id)
+    def remove_id(self, id_):
+        obj = self.get(id_)
         if not obj:
-            raise Exception("No object with given id exists in this set")
+            raise ValueError("No object with given id exists in this set")
         self.remove(obj)

@@ -5,8 +5,6 @@ from game.square import Square
 from game.exceptions import (CordinatesValidationError, NotValidChoiceError, MaxShipReachedError,
                              ShipLengthError, SquareStateError, SquaresNotAttachedError)
 
-# fuck glyph
-
 
 @pytest.fixture
 def squares():
@@ -45,7 +43,6 @@ def ship(squares):
 
 
 class TestShip:
-    """Test Ship class"""
 
     def test_instantiation(self, ship):
         assert isinstance(ship, Ship) and ship.length == 5
@@ -71,7 +68,9 @@ class TestShip:
          (True, SquaresNotAttachedError),
          (False, None)],
     )
-    def test_ship_validators(self, many_squares, ship_squares, random_squares, squares, raise_error, error_type, destroyed_squares):
+    def test_ship_validators(self, many_squares, ship_squares, random_squares,
+                             squares, raise_error, error_type,
+                             destroyed_squares):
         if raise_error:
             with pytest.raises(error_type):
                 if error_type == ShipLengthError:
@@ -106,7 +105,6 @@ def board_wship(board):
 
 
 class TestBoard:
-    """Test Board and related classes and stuff."""
 
     def test_length(self, board):
         assert board.x == 7 and board.y == 7
@@ -123,7 +121,7 @@ class TestBoard:
                 board._validate_cordinates(input)
 
     def test_get_square(self, board):
-        # maybe some other ways? there's no other way
+        # maybe some other ways?
         assert isinstance(board.get_square((0, 0)), Square)
 
     @pytest.mark.parametrize(

@@ -1,10 +1,9 @@
-from itertools import count
-from api.models.base import CustomSet
+from api.models.base import AbstractCustomSet
 
 
 class User:
-    def __init__(self, id, username):
-        self.id = id
+    def __init__(self, id_, username):
+        self.id = id_
         self.username = username
 
     def to_dict(self):
@@ -17,5 +16,5 @@ class User:
         return f"Username: {self.username}| id: {self.id}"
 
 
-class UserSet(CustomSet):
+class UserSet(AbstractCustomSet):
     sub_class = User

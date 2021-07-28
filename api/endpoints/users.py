@@ -1,11 +1,11 @@
-from datetime import datetime, timedelta
-from typing import List
+from datetime import timedelta
+
+from fastapi import APIRouter, Depends
 
 from api.auth.jwt import create_access_token, get_user_from_header_token, users
 from api.conf.settings import ACCESS_TOKEN_EXPIRE_MINUTES
 from api.models.user import User
 from api.schemas.user import Token, UserIn, UserOut
-from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
 
@@ -14,7 +14,8 @@ router = APIRouter()
 async def create_user_with_token(user: UserIn):
     user = users.create_and_add(user.username)
     access_token_expires = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={'sub': str(user.id), 'username': user.username}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={'sub': str(
+        user.id), 'username': user.username}, expires_delta=access_token_expires)
     return Token(access_token=access_token)
 
 

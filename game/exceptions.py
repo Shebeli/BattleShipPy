@@ -1,4 +1,4 @@
-from typing import Union, Any, Tuple
+from typing import Any, Tuple
 
 
 class SquareStateError(Exception):
@@ -41,11 +41,13 @@ class SquaresNotAttachedError(Exception):
     def __init__(self, message: str = 'The given squares are not attached'):
         super().__init__(message)
 
+
 class MaxShipReachedError(Exception):
     """Exception raised if the board reached its maximum ship count"""
 
     def __init__(self, message: str = 'maximum ship count on board is reached'):
         super().__init__(message)
+
 
 class SquareStrikedError(Exception):
     """Exception raised if the square is already striked"""
@@ -53,17 +55,21 @@ class SquareStrikedError(Exception):
     def __init__(self, message: str = 'Selected square has already been striked, choose another'):
         super().__init__(message)
 
+
 class GameConditionError(Exception):
     """Exception raised if the provoked action cannot be done when the game has started or finished"""
 
-    def __init__(self, message: str = 'Cannot do it since the game has already been started or finished'):
+    def __init__(self, message: str = 'Cannot do the selected action since the game has already been started or finished'):
         super().__init__(message)
+
 
 class PlayerTurnError(Exception):
     pass
 
+
 class StartedOrFinishedError(Exception):
     pass
+
 
 class PlayerDoesNotExist(Exception):
     pass

@@ -84,7 +84,7 @@ class TestShip:
 
     def test_ship_is_not_destroyed(self, squares):
         ship = Ship(squares)
-        assert not(ship.is_destroyed())
+        assert not ship.is_destroyed()
 
     def test_ship_is_destroyed(self, squares):
         ship = Ship(squares)
@@ -164,7 +164,7 @@ class TestBoard:
         assert board_wship.is_finished()
 
     def test_board_is_not_over(self, board_wship):
-        assert not(board_wship.is_finished())
+        assert not board_wship.is_finished()
 
     # def test_str(self, board):
     #     print(board)

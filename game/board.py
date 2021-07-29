@@ -41,7 +41,7 @@ class Board:
     def _validate_cordinates(self, *cords):
         for cord in cords:
             i, j = cord[0], cord[1]
-            if not(0 <= i <= self.x-1) or not(0 <= j <= self.y-1):
+            if not 0 <= i <= self.x-1 or not 0 <= j <= self.y-1:
                 raise CordinatesValidationError()
 
     def get_square(self, cord: Tuple[int, int]) -> Square:
@@ -69,7 +69,7 @@ class Board:
 
     def is_finished(self) -> bool:
         for ship in self.ships:
-            if not(ship.is_destroyed()):
+            if not ship.is_destroyed():
                 return False
         return True
 

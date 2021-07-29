@@ -44,7 +44,7 @@ class Ship:
 
     @staticmethod
     def _validate_length(squares: List[Square], min_=2, max_=5) -> None:
-        if not(min_ <= len(squares) <= max_):
+        if not min_ <= len(squares) <= max_:
             raise ShipLengthError
 
     @staticmethod

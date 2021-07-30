@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import List
 
 from fastapi import APIRouter, Depends
 
@@ -23,7 +24,6 @@ async def create_user_with_token(user: UserIn):
 async def test_token_header(user: User = Depends(get_user_from_header_token)):
     return user.to_dict()
 
-# @router.get("/users", response_model=List[UserOut])
-# async def get_users():
-#     users_out = [user.to_dict() for user in users]
-#     return users_out
+@router.get("/users", response_model=List[UserOut])
+async def get_users():
+    return [user.to_dict() for user in users]

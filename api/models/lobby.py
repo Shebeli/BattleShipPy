@@ -52,10 +52,9 @@ class LobbySet(AbstractCustomSet):
         for lobby in self:
             if user in lobby.players:
                 return lobby
-        return
+        return None
 
     def user_has_lobby(self, user: User):
-        """Raises HTTP Exception if the given user is already in a lobby"""
         for lobby in self:
             if user in lobby.players:
                 return True

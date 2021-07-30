@@ -9,13 +9,12 @@ from api.models.user import User
 router = APIRouter()
 
 
-@router.get("/get-lobbies", response_model=List[LobbyGet])
+@router.get("/lobbies", response_model=List[LobbyGet])
 async def get_lobbies():
-    lobbies_out = [lobby.to_dict() for lobby in lobbies]
-    return lobbies_out
+    return [lobby.to_dict() for lobby in lobbies]
 
 
-@router.get("/get-lobby/{lobby_id}", response_model=LobbyGet)
+@router.get("/lobby/{lobby_id}", response_model=LobbyGet)
 async def get_lobby(lobby_id: int):
     lobby = lobbies.get(lobby_id)
     if not lobby:
@@ -33,7 +32,7 @@ async def create_lobby(user: User = Depends(get_user_from_header_token)):
     return lobby.to_dict()
 
 
-@router.delete("/delete-lobby/{lobby_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/lobby/{lobby_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_lobby(lobby_id: int, user: User = Depends(get_user_from_header_token)):
     lobby = lobbies.get(lobby_id)
     if not lobby:

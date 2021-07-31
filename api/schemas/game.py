@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, validator
 
+from api.schemas.user import UserOut
 
 def validate_cordinate(cord: List[int]):
     if len(cord) != 2:
@@ -24,7 +25,8 @@ class ReadyOut(BaseModel):
 
 
 class GameState(BaseModel):
-    turn: str
+    readyState: List[ReadyOut]
+    turn: UserOut
     started: bool
     finished: bool
     winner: Optional[str] = None
@@ -44,8 +46,7 @@ class Map(BaseModel):
                     [2, 2, 2, 2, 0, 0, 2],
                     [0, 0, 0, 0, 0, 0, 2],
                     [0, 0, 0, 0, 0, 0, 2],
-                ],
-                "striked_ship": True
+                ]
             }
         }
 

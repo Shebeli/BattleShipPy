@@ -36,7 +36,7 @@ def test_lobby_join(lobby, mike_header):
     assert 'Mike' in (player['username'] for player in response.json()['players'])
 
 def test_get_lobbies(lobby):
-    response = client.get("/get-lobbies")
+    response = client.get("/lobbies")
     assert response.status_code == 200
     assert response.json()[0]['host']['username'] == 'John'
 

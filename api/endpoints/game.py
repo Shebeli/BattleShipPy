@@ -8,6 +8,7 @@ from game.exceptions import (CordinatesValidationError, ShipLengthError, PlayerT
 from api.schemas.game import (Map, SelectedCord,  MoveShipCords,
                               ReadyGame,  ReadyOut, GameState, ShipOut)
 from api.auth.jwt import get_user_from_header_token, get_lobby_from_user, get_game_from_lobby
+from api.conf.utils import players_state
 from api.models.user import User
 from api.models.lobby import Lobby
 
@@ -77,8 +78,10 @@ async def get_ships(
 async def game_state(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
-    return GameState(turn=game.turn.user.username, started=game.started,
-                     finished=game.finished, winner=game.winner)
+    return GameState(readyState=players_state(game),
+                     turn=game.turn.user.to_dict(),
+                     started=game.started, finished=game.finished,
+                     winner=game.winner)
 
 
 @router.put("/move-ship", status_code=status.HTTP_202_ACCEPTED, response_model=Map,
@@ -111,7 +114,7 @@ async def move_ship(
     return Map(map=game.player_map(user))
 
 
-@router.put("/ready-game", response_model=List[ReadyOut])
+@router.put("/ready-game", response_model=GameState)
 async def ready_game(
         ready: ReadyGame,
         user: User = Depends(get_user_from_header_token),
@@ -122,12 +125,10 @@ async def ready_game(
                             detail="The game has already been started!")
     player = game.get_player(user)
     player.ready = ready.ready
-    players = []
-    for player in game.players:
-        data = player.user.to_dict()
-        data.update({'ready': player.ready})
-        players.append(data)
-    return players
+    return GameState(readyState=players_state(game),
+                     turn=game.turn.user.to_dict(),
+                     started=game.started, finished=game.finished,
+                     winner=game.winner)
 
 
 @router.put("/start-game", response_model=GameState)
@@ -145,8 +146,10 @@ async def start_game(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="One or both of players are not ready!")
     game.started = True
-    return GameState(turn=game.turn.user.username, started=game.started,
-                     finished=game.finished, winner=game.winner)
+    return GameState(readyState=players_state(game),
+                     turn=game.turn.user.to_dict(),
+                     started=game.started, finished=game.finished,
+                     winner=game.winner)
 
 
 @router.put("/strike-square")
@@ -155,21 +158,22 @@ async def strike_square(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
     player = game.get_player(user)
-    if not game.started:  # players should be ready
+    if not game.started:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Players are not ready yet!")
+                            detail="The game hasn't been started yet!")
     if game.finished:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='The game has already been finished! cannot strike!')
     try:  # CordinatesValidateError, Player not for this game, SquareStrikedError
+        detail = None
         game.strike(square.cordinate, user)
-    except (SquareStrikedError, CordinatesValidationError, PlayerTurnError) as exception:
-        if exception == SquareStrikedError:
-            detail = "This square has already been striked"
-        elif exception == CordinatesValidationError:
-            detail = "Given cordinates are not within range of X and Y of board!'"
-        else:
-            detail = 'Its not your turn yet!'
+    except SquareStrikedError:
+        detail = "This square has already been striked"
+    except CordinatesValidationError:
+        detail = "Given cordinates are not within range of X and Y of board!'"
+    except PlayerTurnError:
+        detail = 'Its not your turn yet!'
+    if detail:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=detail)
     if game.winner:

@@ -42,7 +42,7 @@ async def delete_lobby(lobby_id: int, user: User = Depends(get_user_from_header_
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Only host can delete the lobby")
     lobbies.remove_id(lobby_id)
-    return
+    return None
 
 
 @router.get("/my-lobby", response_model=LobbyGet)
@@ -91,4 +91,4 @@ async def leave_lobby(user: User = Depends(get_user_from_header_token)):
     lobby.remove_player(user)
     if not lobby.players:
         lobbies.remove(lobby)
-    return
+    return None

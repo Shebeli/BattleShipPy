@@ -5,6 +5,8 @@ from api.main import app
 from api.auth.jwt import get_user_from_header_token
 from api.conf.utils import get_first_sq
 
+# utility and fixtures
+
 
 @pytest.fixture
 def client():
@@ -12,42 +14,61 @@ def client():
 
 
 @pytest.fixture
-def full_lobby(client):
-    john_token = client.post(
-        "/token", json={'username': 'John'}).json()['access_token']
-    john_header = {'Authorization': f'Bearer {john_token}'}
-    mike_token = client.post(
-        "/token", json={'username': 'Mike'}).json()['access_token']
-    mike_header = {'Authorization': f'Bearer {mike_token}'}
+def j(client):
+    response = client.post("/token", json={'username': 'John'})
+    return {"Authorization": f'Bearer {response.json()["access_token"]}'}
+
+
+@pytest.fixture
+def m(client):
+    response = client.post("/token", json={'username': 'Mike'})
+    return {"Authorization": f'Bearer {response.json()["access_token"]}'}
+
+
+@pytest.fixture
+def full_lobby(j, m, client):
     uuid = client.post(
-        "/create-lobby", headers=john_header).json()['uuid']  # john as host
-    client.put("/join-lobby", headers=mike_header, json={'uuid': uuid})
-    client.put("/start-lobby", headers=john_header)
-    return john_header, mike_header
+        "/create-lobby", headers=j).json()['uuid']  # john as host
+    client.put("/join-lobby", headers=m, json={'uuid': uuid})
+    client.put("/start-lobby", headers=j)
 
 
-def test_my_map(full_lobby, client):
-    j, m = full_lobby
+@pytest.fixture
+def started_game(j, m, full_lobby, client):
+    client.put("/ready-game", headers=j, json={'ready': True})
+    client.put("/ready-game", headers=m, json={'ready': True})
+    client.put("/start-game", headers=j)
+
+
+def strike(client, user, cord=[0, 0]):
+    return client.put("/strike-square", headers=user, json={'cordinate': cord})
+
+
+def get_turn(client, user):
+    return client.get("/game-state", headers=user).json()['turn']['username']
+
+# tests
+
+
+def test_my_map(j, m, full_lobby, client):
     response = client.get("/my-map", headers=j)
     assert response.status_code == 200
     assert isinstance(response.json()['map'], list)
 
 
-def test_opp_map(full_lobby, client):
-    j, m = full_lobby
+def test_opp_map(j, m, full_lobby, client):
     response = client.get("/opp-map", headers=j)
     assert response.status_code == 200
     assert isinstance(response.json()['map'], list)
 
 
-def test_game_state(full_lobby, client):
-    j, m = full_lobby
+def test_game_state(j, m, full_lobby, client):
     response = client.get("/game-state", headers=j)
     assert response.json()['started'] == False
+    assert response.json()['readyState'][0]['ready'] == False
 
 
-def test_move_ship(full_lobby, client):
-    j, m = full_lobby
+def test_move_ship(j, m, full_lobby, client):
     # since we don't know where a ship is, we POST using the first square which we get from map
     map_ = client.get("/my-map", headers=j).json()['map']
     x, y = get_first_sq(map_, 2)
@@ -57,40 +78,68 @@ def test_move_ship(full_lobby, client):
     assert True
 
 
-def test_ready_game(full_lobby, client):
-    j, m = full_lobby
-    response = client.put("/ready-game", headers=j, json={'ready': True})
-    response_ = client.put("/ready-game", headers=m, json={'ready': True})
-    assert response.status_code == 200 and response_.status_code == 200
+def test_ready_game(j, m, full_lobby, client):
+    client.put("/ready-game", headers=j, json={'ready': True})
+    response = client.put("/ready-game", headers=m, json={'ready': True})
+    assert response.status_code == 200
+    assert response.json()['readyState'][0]['ready'] == True
 
 
-def test_start_game(full_lobby, client):
-    j, m = full_lobby
+def test_start_game(j, m, full_lobby, client):
     client.put("/ready-game", headers=j, json={'ready': True})
     client.put("/ready-game", headers=m, json={'ready': True})
     response = client.put("/start-game", headers=j)
     assert response.status_code == 200
 
 
-@pytest.fixture
-def started_game(full_lobby, client):
-    j, m = full_lobby
-    client.put("/ready-game", headers=j, json={'ready': True})
-    client.put("/ready-game", headers=m, json={'ready': True})
-    client.put("/start-game", headers=j)
-    return j, m
+def test_strike(j, m, started_game, client):
+    turn = get_turn(client, j)
+    if turn == "John":
+        response = strike(client, j)
+    else:
+        response = strike(client, m)
+    assert response.status_code == 200
+    assert response.json()['detail'] in (
+        "You've been granted another strike!",
+        "You missed!")  # you either hit or miss, huh?
 
 
-def test_strike(started_game, client):
-    j, m = started_game
+def test_strike_same_coordinate(j, m, started_game, client):
+    j_count, m_count = 0, 0
+    while j_count != 2 and m_count != 2:
+        turn = get_turn(client, j)
+        print(turn)
+        if turn == 'John':
+            response = strike(client, j)
+            j_count += 1
+        else:
+            response = strike(client, m)
+            m_count += 1
+    assert response.status_code == 406
+    assert response.json()['detail'] == 'This square has already been striked'
+
+
+def test_strike_invalid_turn(j, m, started_game, client):
+    turn = get_turn(client, j)
+    if turn == "John":
+        response = strike(client, m)
+    else:
+        response = strike(client, j)
+    assert response.status_code == 406
+    assert response.json()['detail'] == 'Its not your turn yet!'
+
+
+def test_strike_not_ready(j, m, full_lobby, client):
+    response = strike(client, j)
+    assert response.status_code == 400
+    assert response.json()['detail'] == "The game hasn't been started yet!"
+
+
+def test_strike_finished_game():
+    pass  # implemented when finished_game fixture is implemented.
+
+
+def test_cordinate_validator(j, m, started_game, client):
     response = client.put("/strike-square", headers=j,
-                           json={'cordinate': [0, 0]})
-    # note that this test is 50/50 since turn can be the other player and 406 error indicates this state.
-    assert response.status_code == 200 or response.status_code == 406
-
-
-def test_cordinate_validator(started_game, client):
-    j, m = started_game
-    response = client.put("/strike-square", headers=j,
-                           json={'cordinate': [0, 0, 0]})
+                          json={'cordinate': [0, 0, 0]})
     assert response.status_code == 422

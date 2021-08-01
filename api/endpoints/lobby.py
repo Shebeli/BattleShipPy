@@ -2,19 +2,19 @@ from typing import List
 
 from fastapi import HTTPException, status, APIRouter, Depends
 
-from api.schemas.lobby import LobbyIn, LobbyOut,  LobbyGet
+from api.schemas.lobby import LobbyIn, LobbyOut
 from api.auth.jwt import lobbies, get_user_from_header_token
 from api.models.user import User
 
 router = APIRouter()
 
 
-@router.get("/lobbies", response_model=List[LobbyGet])
+@router.get("/lobby", response_model=List[LobbyOut])
 async def get_lobbies():
     return [lobby.to_dict() for lobby in lobbies]
 
 
-@router.get("/lobby/{lobby_id}", response_model=LobbyGet)
+@router.get("/lobby/{lobby_id}", response_model=LobbyOut)
 async def get_lobby(lobby_id: int):
     lobby = lobbies.get(lobby_id)
     if not lobby:
@@ -23,7 +23,7 @@ async def get_lobby(lobby_id: int):
     return lobby.to_dict()
 
 
-@router.post("/create-lobby", response_model=LobbyOut, status_code=status.HTTP_201_CREATED)
+@router.post("/lobby", response_model=LobbyOut, status_code=status.HTTP_201_CREATED)
 async def create_lobby(user: User = Depends(get_user_from_header_token)):
     if lobbies.user_has_lobby(user):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -45,7 +45,7 @@ async def delete_lobby(lobby_id: int, user: User = Depends(get_user_from_header_
     return None
 
 
-@router.get("/my-lobby", response_model=LobbyGet)
+@router.get("/my-lobby", response_model=LobbyOut)
 async def get_my_lobby(user: User = Depends(get_user_from_header_token)):
     lobby = lobbies.user_get_lobby(user)
     if lobby:

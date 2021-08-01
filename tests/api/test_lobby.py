@@ -20,14 +20,14 @@ def mike_header():
 
 
 def test_lobby_create(john_header):
-    response = client.post("/create-lobby", headers=john_header)
+    response = client.post("/lobby", headers=john_header)
     assert response.status_code == 201
     assert response.json()['host']['username'] == 'John'
 
 
 @pytest.fixture
 def lobby(john_header):
-    response = client.post("/create-lobby", headers=john_header)
+    response = client.post("/lobby", headers=john_header)
     return response.json()['uuid']
 
 def test_lobby_join(lobby, mike_header):
@@ -36,7 +36,7 @@ def test_lobby_join(lobby, mike_header):
     assert 'Mike' in (player['username'] for player in response.json()['players'])
 
 def test_get_lobbies(lobby):
-    response = client.get("/lobbies")
+    response = client.get("/lobby")
     assert response.status_code == 200
     assert response.json()[0]['host']['username'] == 'John'
 

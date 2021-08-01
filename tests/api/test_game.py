@@ -28,7 +28,7 @@ def m(client):
 @pytest.fixture
 def full_lobby(j, m, client):
     uuid = client.post(
-        "/create-lobby", headers=j).json()['uuid']  # john as host
+        "/lobby", headers=j).json()['uuid']  # john as host
     client.put("/join-lobby", headers=m, json={'uuid': uuid})
     client.put("/start-lobby", headers=j)
 
@@ -65,14 +65,14 @@ def test_opp_map(j, m, full_lobby, client):
 def test_game_state(j, m, full_lobby, client):
     response = client.get("/game-state", headers=j)
     assert response.json()['started'] == False
-    assert response.json()['readyState'][0]['ready'] == False
+    assert response.json()['winner'] == None
 
 
 def test_move_ship(j, m, full_lobby, client):
     # since we don't know where a ship is, we POST using the first square which we get from map
     map_ = client.get("/my-map", headers=j).json()['map']
     x, y = get_first_sq(map_, 2)
-    response = client.get("/get-ship", headers=j, params={'x': x, 'y': y})
+    response = client.get("/ship", headers=j, params={'x': x, 'y': y})
     ship_cord = response.json()['cordinates']
     # implementing this test is complex since the location of ships are random and the output can be many different cases.
     assert True
@@ -82,8 +82,12 @@ def test_ready_game(j, m, full_lobby, client):
     client.put("/ready-game", headers=j, json={'ready': True})
     response = client.put("/ready-game", headers=m, json={'ready': True})
     assert response.status_code == 200
-    assert response.json()['readyState'][0]['ready'] == True
+    assert response.json()[0]['ready'] == True
 
+def test_ready_state(j, m, started_game, client):
+    response = client.get("ready-state", headers=j)
+    for player in response.json():
+        assert player['ready'] == True
 
 def test_start_game(j, m, full_lobby, client):
     client.put("/ready-game", headers=j, json={'ready': True})

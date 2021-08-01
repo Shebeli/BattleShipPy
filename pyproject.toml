@@ -11,6 +11,7 @@ fastapi = "^0.65.2"
 uvicorn = {extras = ["standard"], version = "^0.14.0"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 requests = "^2.26.0"
+celery = "^5.1.2"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.7"

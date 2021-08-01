@@ -17,13 +17,13 @@ async def create_user_with_token(user: UserIn):
     access_token_expires = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={'sub': str(
         user.id), 'username': user.username}, expires_delta=access_token_expires)
-    return Token(access_token=access_token)
+    return Token(access_token=access_token, user=user.to_dict())
 
 
 @router.get("/token/test_header", response_model=UserOut)
 async def test_token_header(user: User = Depends(get_user_from_header_token)):
     return user.to_dict()
 
-@router.get("/users", response_model=List[UserOut])
+@router.get("/user", response_model=List[UserOut])
 async def get_users():
     return [user.to_dict() for user in users]

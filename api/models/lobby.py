@@ -20,14 +20,12 @@ class Lobby:
             return True
         return False
 
-    def add_player(self, player):
+    def add_player(self, player: User):
         if self.is_full:
             raise Exception("Lobby is full")
         self.players.add(player)
 
-    def remove_player(self, player):
-        if player not in self.players:
-            raise Exception("The given player is not in the lobby")
+    def remove_player(self, player: User):
         self.players.remove(player)
         if self.players:
             self.host = next(iter(self.players))

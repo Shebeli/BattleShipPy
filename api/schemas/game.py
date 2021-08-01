@@ -25,11 +25,10 @@ class ReadyOut(BaseModel):
 
 
 class GameState(BaseModel):
-    readyState: List[ReadyOut]
     turn: UserOut
     started: bool
     finished: bool
-    winner: Optional[str] = None
+    winner: Optional[UserOut] = None
 
 
 class Map(BaseModel):

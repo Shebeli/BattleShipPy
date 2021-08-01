@@ -1,16 +1,8 @@
 from pydantic import BaseModel
 from typing import List
 
+from api.schemas.game import ReadyOut
 from api.schemas.user import UserOut
-
-
-class LobbyGet(BaseModel):
-    id: int
-    uuid: str
-    host: UserOut
-    players: List[UserOut]
-    has_started: bool = False
-    is_full: bool = False
 
 
 class LobbyOut(BaseModel):
@@ -18,6 +10,8 @@ class LobbyOut(BaseModel):
     uuid: str
     host: UserOut
     players: List[UserOut]
+    has_started: bool = False
+    is_full: bool = False
 
 
 class LobbyIn(BaseModel):

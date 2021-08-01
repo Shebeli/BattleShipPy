@@ -49,7 +49,7 @@ async def opponent_map(
     return Map(map=game.opponent_map(user))
 
 
-@router.get("/get-ship", response_model=ShipOut)
+@router.get("/ship", response_model=ShipOut)
 async def get_ship(
         x: int,
         y: int,
@@ -63,7 +63,7 @@ async def get_ship(
     return ShipOut(cordinates=ship.cords)
 
 
-@router.get("/get-ships", response_model=List[ShipOut])
+@router.get("/ships", response_model=List[ShipOut])
 async def get_ships(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
@@ -78,10 +78,15 @@ async def get_ships(
 async def game_state(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
-    return GameState(readyState=players_state(game),
-                     turn=game.turn.user.to_dict(),
-                     started=game.started, finished=game.finished,
-                     winner=game.winner)
+    return GameState(turn=game.turn.user.to_dict(),
+                    started=game.started, finished=game.finished,
+                    winner=game.winner)
+
+@router.get("/ready-state", response_model=List[ReadyOut])
+async def ready_state(
+        user: User = Depends(get_user_from_header_token),
+        game: BattleShipGame = Depends(get_game_from_lobby)):
+    return players_state(game)
 
 
 @router.put("/move-ship", status_code=status.HTTP_202_ACCEPTED, response_model=Map,
@@ -95,7 +100,6 @@ async def move_ship(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='Cannot move ships since game is either started or finished.')
     try:
-        # game.p1.board.get_ship(square)
         ship = game.get_ship(cordinates.cordinate, user)
     except CordinatesValidationError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -105,7 +109,6 @@ async def move_ship(
                             detail='Theres no ship in this square!')
     try:
         game.move_ship(ship, cordinates.cordinates, user)
-    # another case where SquaresAreNotAttached, MinXMax and if SquaresAreNotEmpty
     except (ShipLengthError, SquareStateError, SquaresNotAttachedError):
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
                             detail="""Given length of ship is not valid,
@@ -114,9 +117,9 @@ async def move_ship(
     return Map(map=game.player_map(user))
 
 
-@router.put("/ready-game", response_model=GameState)
+@router.put("/ready-game", response_model=List[ReadyOut])
 async def ready_game(
-        ready: ReadyGame,
+        ready_state: ReadyGame,
         user: User = Depends(get_user_from_header_token),
         lobby: Lobby = Depends(get_lobby_from_user),
         game: BattleShipGame = Depends(get_game_from_lobby)):
@@ -124,11 +127,8 @@ async def ready_game(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="The game has already been started!")
     player = game.get_player(user)
-    player.ready = ready.ready
-    return GameState(readyState=players_state(game),
-                     turn=game.turn.user.to_dict(),
-                     started=game.started, finished=game.finished,
-                     winner=game.winner)
+    player.ready = ready_state.ready
+    return players_state(game)
 
 
 @router.put("/start-game", response_model=GameState)
@@ -146,10 +146,9 @@ async def start_game(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="One or both of players are not ready!")
     game.started = True
-    return GameState(readyState=players_state(game),
-                     turn=game.turn.user.to_dict(),
-                     started=game.started, finished=game.finished,
-                     winner=game.winner)
+    return GameState(turn=game.turn.user.to_dict(),
+                    started=game.started, finished=game.finished,
+                    winner=game.winner)
 
 
 @router.put("/strike-square")
@@ -164,7 +163,7 @@ async def strike_square(
     if game.finished:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail='The game has already been finished! cannot strike!')
-    try:  # CordinatesValidateError, Player not for this game, SquareStrikedError
+    try:
         detail = None
         game.strike(square.cordinate, user)
     except SquareStrikedError:

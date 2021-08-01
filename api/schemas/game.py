@@ -21,7 +21,7 @@ class StartGame(BaseModel):
 class ReadyOut(BaseModel):
     id: int
     username: str
-    ready: bool
+    ready: bool = None
 
 
 class GameState(BaseModel):

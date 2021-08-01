@@ -9,7 +9,7 @@ class LobbyOut(BaseModel):
     id: int
     uuid: str
     host: UserOut
-    players: List[UserOut]
+    players: List[ReadyOut]
     has_started: bool = False
     is_full: bool = False
 

@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from api.models.user import User
 from api.models.base import AbstractCustomSet
-
+from api.conf.utils import players_ready_state
 
 class Lobby:
     def __init__(self, id_, host: User):
@@ -33,15 +33,19 @@ class Lobby:
             self.host = None  # object should be deleted
 
     def to_dict(self):
-        return {
+        data = {
             'id': self.id,
             'uuid': self.uuid,
             'host': self.host.to_dict(),
-            'players': [user.to_dict() for user in self.players],
             'has_started': self.has_started,
             'is_full': self.is_full
         }
-
+        if self.game:
+            data.update({"players": players_ready_state(self.game)})
+        else:
+            data.update({"players": [user.to_dict() for user in self.players]})
+        return data
+            
 
 class LobbySet(AbstractCustomSet):
     sub_class = Lobby

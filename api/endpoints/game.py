@@ -8,7 +8,7 @@ from game.exceptions import (CordinatesValidationError, ShipLengthError, PlayerT
 from api.schemas.game import (Map, SelectedCord,  MoveShipCords,
                               ReadyGame,  ReadyOut, GameState, ShipOut)
 from api.auth.jwt import get_user_from_header_token, get_lobby_from_user, get_game_from_lobby
-from api.conf.utils import players_state
+from api.conf.utils import players_ready_state
 from api.models.user import User
 from api.models.lobby import Lobby
 
@@ -86,7 +86,7 @@ async def game_state(
 async def ready_state(
         user: User = Depends(get_user_from_header_token),
         game: BattleShipGame = Depends(get_game_from_lobby)):
-    return players_state(game)
+    return players_ready_state(game)
 
 
 @router.put("/move-ship", status_code=status.HTTP_202_ACCEPTED, response_model=Map,
@@ -128,7 +128,7 @@ async def ready_game(
                             detail="The game has already been started!")
     player = game.get_player(user)
     player.ready = ready_state.ready
-    return players_state(game)
+    return players_ready_state(game)
 
 
 @router.put("/start-game", response_model=GameState)

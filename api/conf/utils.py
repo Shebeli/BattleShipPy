@@ -8,7 +8,7 @@ def get_first_sq(arr: list, value: int) -> Union[None, Tuple[int, int]]:
     return None
 
 
-def players_state(game) -> List[Dict]:
+def players_ready_state(game) -> List[Dict]:
     players = []
     for player in game.players:
         data = player.user.to_dict()

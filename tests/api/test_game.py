@@ -112,7 +112,6 @@ def test_strike_same_coordinate(j, m, started_game, client):
     j_count, m_count = 0, 0
     while j_count != 2 and m_count != 2:
         turn = get_turn(client, j)
-        print(turn)
         if turn == 'John':
             response = strike(client, j)
             j_count += 1

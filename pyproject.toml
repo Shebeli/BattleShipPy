@@ -3,15 +3,16 @@ name = "BattleShip"
 version = "0.2.0"
 description = "Battleship game vector engine and API using fastAPI"
 authors = ["shebeli <shervinsaeedi78@gmail.com>"]
-#testing ammend commit
+
 [tool.poetry.dependencies]
-python = "^3.8.8"
+python = "^3.8"
 pytest = "^6.2.4"
 fastapi = "^0.65.2"
 uvicorn = {extras = ["standard"], version = "^0.14.0"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 requests = "^2.26.0"
-celery = "^5.1.2"
+celery = {extras = ["redis"], version = "^5.1.2"}
+redis = "^3.5.3"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.7"

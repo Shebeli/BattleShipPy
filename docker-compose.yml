@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    ports:  
+      - 8000:8000
+    command: bash -c "uvicorn api.main:app --host 0.0.0.0"
+    volumes:
+      - .:/usr/src/app
+    environment: 
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on: 
+      - redis
+  
+  celery:
+    build: .
+    command: bash -c "celery --app api.worker.celery worker --loglevel=info"
+    volumes:
+      - .:/usr/src/app
+    environment: 
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on: 
+      - redis
+      - web
+
+  redis:
+    image: redis:6-alpine

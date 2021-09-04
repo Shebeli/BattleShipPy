@@ -6,6 +6,7 @@ origins = [
     'http://localhost',
     "http://localhost:8080",
     "http://localhost:5000",
+    'https://battleshiplte.netlify.app/'
 ]
 
 app = FastAPI()
